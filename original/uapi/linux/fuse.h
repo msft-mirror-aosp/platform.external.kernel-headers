@@ -179,14 +179,6 @@
  *  7.33
  *  - add FUSE_HANDLE_KILLPRIV_V2, FUSE_WRITE_KILL_SUIDGID, FATTR_KILL_SUIDGID
  *  - add FUSE_OPEN_KILL_SUIDGID
- *  - extend fuse_setxattr_in, add FUSE_SETXATTR_EXT
- *  - add FUSE_SETXATTR_ACL_KILL_SGID
- *
- *  7.34
- *  - add FUSE_SYNCFS
- *
- *  7.35
- *  - add FOPEN_NOFLUSH
  */
 
 #ifndef _LINUX_FUSE_H
@@ -222,7 +214,7 @@
 #define FUSE_KERNEL_VERSION 7
 
 /** Minor version number of this interface */
-#define FUSE_KERNEL_MINOR_VERSION 35
+#define FUSE_KERNEL_MINOR_VERSION 33
 
 /** The node ID of the root inode */
 #define FUSE_ROOT_ID 1
@@ -293,14 +285,12 @@ struct fuse_file_lock {
  * FOPEN_NONSEEKABLE: the file is not seekable
  * FOPEN_CACHE_DIR: allow caching this directory
  * FOPEN_STREAM: the file is stream-like (no file position at all)
- * FOPEN_NOFLUSH: don't flush data cache on close (unless FUSE_WRITEBACK_CACHE)
  */
 #define FOPEN_DIRECT_IO		(1 << 0)
 #define FOPEN_KEEP_CACHE	(1 << 1)
 #define FOPEN_NONSEEKABLE	(1 << 2)
 #define FOPEN_CACHE_DIR		(1 << 3)
 #define FOPEN_STREAM		(1 << 4)
-#define FOPEN_NOFLUSH		(1 << 5)
 
 /**
  * INIT request/reply flags
@@ -340,7 +330,6 @@ struct fuse_file_lock {
  *			does not have CAP_FSETID. Additionally upon
  *			write/truncate sgid is killed only if file has group
  *			execute permission. (Same as Linux VFS behavior).
- * FUSE_SETXATTR_EXT:	Server supports extended struct fuse_setxattr_in
  */
 #define FUSE_ASYNC_READ		(1 << 0)
 #define FUSE_POSIX_LOCKS	(1 << 1)
@@ -371,7 +360,6 @@ struct fuse_file_lock {
 #define FUSE_MAP_ALIGNMENT	(1 << 26)
 #define FUSE_SUBMOUNTS		(1 << 27)
 #define FUSE_HANDLE_KILLPRIV_V2	(1 << 28)
-#define FUSE_SETXATTR_EXT	(1 << 29)
 #define FUSE_PASSTHROUGH	(1 << 31)
 
 /**
@@ -464,12 +452,6 @@ struct fuse_file_lock {
  */
 #define FUSE_OPEN_KILL_SUIDGID	(1 << 0)
 
-/**
- * setxattr flags
- * FUSE_SETXATTR_ACL_KILL_SGID: Clear SGID when system.posix_acl_access is set
- */
-#define FUSE_SETXATTR_ACL_KILL_SGID	(1 << 0)
-
 enum fuse_opcode {
 	FUSE_LOOKUP		= 1,
 	FUSE_FORGET		= 2,  /* no reply */
@@ -518,7 +500,6 @@ enum fuse_opcode {
 	FUSE_COPY_FILE_RANGE	= 47,
 	FUSE_SETUPMAPPING	= 48,
 	FUSE_REMOVEMAPPING	= 49,
-	FUSE_SYNCFS		= 50,
 	FUSE_CANONICAL_PATH	= 2016,
 
 	/* CUSE specific operations */
@@ -702,13 +683,9 @@ struct fuse_fsync_in {
 	uint32_t	padding;
 };
 
-#define FUSE_COMPAT_SETXATTR_IN_SIZE 8
-
 struct fuse_setxattr_in {
 	uint32_t	size;
 	uint32_t	flags;
-	uint32_t	setxattr_flags;
-	uint32_t	padding;
 };
 
 struct fuse_getxattr_in {
@@ -853,6 +830,14 @@ struct fuse_in_header {
 	uint32_t	padding;
 };
 
+/* fuse_passthrough_out for passthrough V1 */
+struct fuse_passthrough_out {
+	uint32_t	fd;
+	/* For future implementation */
+	uint32_t	len;
+	void		*vec;
+};
+
 struct fuse_out_header {
 	uint32_t	len;
 	int32_t		error;
@@ -930,9 +915,8 @@ struct fuse_notify_retrieve_in {
 /* Device ioctls: */
 #define FUSE_DEV_IOC_MAGIC		229
 #define FUSE_DEV_IOC_CLONE		_IOR(FUSE_DEV_IOC_MAGIC, 0, uint32_t)
-/* 127 is reserved for the V1 interface implementation in Android (deprecated) */
-/* 126 is reserved for the V2 interface implementation in Android */
-#define FUSE_DEV_IOC_PASSTHROUGH_OPEN	_IOW(FUSE_DEV_IOC_MAGIC, 126, __u32)
+/* 127 is reserved for the V1 interface implementation in Android */
+#define FUSE_DEV_IOC_PASSTHROUGH_OPEN	_IOW(FUSE_DEV_IOC_MAGIC, 127, struct fuse_passthrough_out)
 
 struct fuse_lseek_in {
 	uint64_t	fh;
@@ -984,9 +968,5 @@ struct fuse_removemapping_one {
 
 #define FUSE_REMOVEMAPPING_MAX_ENTRY   \
 		(PAGE_SIZE / sizeof(struct fuse_removemapping_one))
-
-struct fuse_syncfs_in {
-	uint64_t	padding;
-};
 
 #endif /* _LINUX_FUSE_H */
