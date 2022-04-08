@@ -5,7 +5,6 @@
 #include <linux/types.h>
 #include <linux/time_types.h>
 
-#ifndef __KERNEL__
 #ifndef _STRUCT_TIMESPEC
 #define _STRUCT_TIMESPEC
 struct timespec {
@@ -19,17 +18,6 @@ struct timeval {
 	__kernel_suseconds_t	tv_usec;	/* microseconds */
 };
 
-struct itimerspec {
-	struct timespec it_interval;/* timer period */
-	struct timespec it_value;	/* timer expiration */
-};
-
-struct itimerval {
-	struct timeval it_interval;/* timer interval */
-	struct timeval it_value;	/* current value */
-};
-#endif
-
 struct timezone {
 	int	tz_minuteswest;	/* minutes west of Greenwich */
 	int	tz_dsttime;	/* type of dst correction */
@@ -42,6 +30,16 @@ struct timezone {
 #define	ITIMER_REAL		0
 #define	ITIMER_VIRTUAL		1
 #define	ITIMER_PROF		2
+
+struct itimerspec {
+	struct timespec it_interval;	/* timer period */
+	struct timespec it_value;	/* timer expiration */
+};
+
+struct itimerval {
+	struct timeval it_interval;	/* timer interval */
+	struct timeval it_value;	/* current value */
+};
 
 /*
  * The IDs of the various system clocks (for POSIX.1b interval timers):
