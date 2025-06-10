@@ -432,5 +432,6 @@
 #define __NR_getxattrat (__NR_SYSCALL_BASE + 464)
 #define __NR_listxattrat (__NR_SYSCALL_BASE + 465)
 #define __NR_removexattrat (__NR_SYSCALL_BASE + 466)
+#define __NR_open_tree_attr (__NR_SYSCALL_BASE + 467)
 
 #endif /* _UAPI_ASM_UNISTD_OABI_H */
